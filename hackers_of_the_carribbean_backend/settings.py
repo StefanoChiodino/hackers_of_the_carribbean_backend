@@ -75,10 +75,13 @@ WSGI_APPLICATION = 'hackers_of_the_carribbean_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+DATABASES = {"default": {
+    "ENGINE": "django.db.backends.postgresql_psycopg2",
+    "NAME": "pirates_caribbean",
+    "USER": "stefano",
+    "PASSWORD": "",
+    "HOST": "localhost",
+    "PORT": "",
     }
 }
 

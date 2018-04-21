@@ -18,7 +18,7 @@ class Fight(models.Model):
 
 class Step(models.Model):
     fight = models.ForeignKey(Fight, on_delete=models.CASCADE)
-    index = models.IntegerField(unique=True)
+    index = models.IntegerField()
     insult = models.ForeignKey(Insult, on_delete=models.CASCADE)
 
 
