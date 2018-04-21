@@ -1,5 +1,5 @@
 import math
-from random import randint, random
+from random import randint, random, shuffle
 from typing import List
 
 from django.db.models import QuerySet
@@ -21,34 +21,26 @@ def begin(request):
     game.save()
 
     # Create steps with random insults and the possible comebacks.
-    # TODO: make sure steps have unique insults, if enough insults are present.
-    for i in range(3):
-        # Create step with random insult.
-        insult_count = Insult.objects.count()
-        random_insult_index = randint(0, insult_count - 1)
-        random_insult = Insult.objects.all()[random_insult_index]
-        current_step = Step(index=i, insult=random_insult, fight=fight)
+    # TODO: what happens if there are less insults available than how many we take?
+    all_insults: List[Insult] = [i for i in Insult.objects.all()]
+    shuffle(all_insults)
+    selected_insults: List[Insult] = all_insults[:3]
+    for i, selected_insult in enumerate(selected_insults):
+        current_step = Step(index=i, insult=selected_insult, fight=fight)
         current_step.save()
 
-        # Save correct comebacks.
-        # TODO: randomise comebacks.
-        step_comeback = StepComeback(step=current_step, comeback=random_insult.correct_comeback)
-        step_comeback.save()
-
-        # Generate other possible comebacks for the step.
-        comebacks = [current_step.insult.correct_comeback.text]
-        comeback_count = Insult.objects.count()
-        for _ in range(3):
-            random_comeback_index = randint(0, comeback_count - 1)
-            random_comeback = Comeback.objects.all()[random_comeback_index]
-            comebacks.append(random_comeback.text)
-
-            # Save incorrect comeback.
-            step_comeback = StepComeback(step=current_step, comeback=random_comeback)
+        correct_comeback = selected_insult.correct_comeback
+        all_wrong_comebacks = [c for c in Comeback.objects.exclude(id=correct_comeback.id)]
+        shuffle(all_wrong_comebacks)
+        selected_wrong_comebacks = all_wrong_comebacks[:3]
+        step_comebacks: List[Comeback] = selected_wrong_comebacks
+        step_comebacks.append(correct_comeback)
+        for step_comeback in step_comebacks:
+            step_comeback = StepComeback(step=current_step, comeback=step_comeback)
             step_comeback.save()
 
     first_step = Step.objects.filter(fight=fight, index=0).first()
-    step_comebacks = StepComeback.objects.filter(step=first_step)
+    step_comebacks: List[StepComeback] = StepComeback.objects.filter(step=first_step)
 
     data = {
         'game_id': game.id,
