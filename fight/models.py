@@ -48,3 +48,11 @@ class Game(models.Model):
 
     def __str__(self):
         return str(f'{self.health} - {self.current_fight}')
+
+
+class FightStepOutcome(models.Model):
+    step = models.ForeignKey(Step, on_delete=models.CASCADE)
+    won = models.BooleanField()
+
+    def __str__(self):
+        return str(f'{self.step} - {self.won}')

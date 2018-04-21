@@ -1,10 +1,12 @@
 from random import randint, random
+from typing import List
 
+from django.db.models import QuerySet
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from fuzzywuzzy import fuzz
 
-from fight.models import Game, Fight, Step, Insult, Comeback, StepComeback
+from fight.models import Game, Fight, Step, Insult, Comeback, StepComeback, FightStepOutcome
 
 
 def begin(request):
@@ -67,7 +69,11 @@ def step(request):
 
     step_comebacks = StepComeback.objects.filter(step=current_step)
 
+    fight_steps = Step.objects.filter(fight=current_step.fight)
+    fight_step_outcomes: QuerySet[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+
     data = {
+        'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
         'insult': current_step.insult.text,
         'comebacks': [c.comeback.text for c in step_comebacks]
     }
@@ -84,9 +90,17 @@ def comeback(request):
     correct_comeback = current_step.insult.correct_comeback
 
     # Find most probable comeback.
-    step_comebacks_by_match_score = sorted(step_comebacks, key=lambda sc: fuzz.ratio(comeback_text, sc.comeback.text))
-    matched_comeback = step_comebacks_by_match_score[len(step_comebacks_by_match_score) - 1]
-    if matched_comeback.comeback.id is not correct_comeback.id:
+    step_comebacks_by_match_score: List[StepComeback] =\
+        sorted(step_comebacks, key=lambda sc: fuzz.ratio(comeback_text, sc.comeback.text))
+    step_comebacks_by_match_score.reverse()
+    matched_comeback = step_comebacks_by_match_score[0]
+
+    # Save outcome.
+    successful = matched_comeback.comeback.id is correct_comeback.id
+    fight_step_outcome: FightStepOutcome = FightStepOutcome(step=current_step, won=successful)
+    fight_step_outcome.save()
+
+    if successful:
         game.health = game.health - 1
         if game.health is 0:
             return JsonResponse({'dead': True})
@@ -100,7 +114,11 @@ def comeback(request):
 
     next_step_comebacks = StepComeback.objects.filter(step=next_step)
 
+    fight_steps = Step.objects.filter(fight=current_step.fight)
+    fight_step_outcomes: QuerySet[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+
     data = {
+        'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
         'insult': next_step.insult.text,
         'comebacks': [c.comeback.text for c in next_step_comebacks]
     }
@@ -110,7 +128,10 @@ def comeback(request):
 
 def get_current_game() -> Game:
     # TODO: fix hack.
-    if Game.objects.count() == 0:
-        game = Game(health=3)
-        game.save()
-    return Game.objects.filter(health__gt=0).first()
+    game = Game.objects.filter(health__gt=0).first()
+    if game is not None:
+        return game
+
+    game = Game(health=3)
+    game.save()
+    return game
