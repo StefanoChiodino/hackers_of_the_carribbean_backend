@@ -43,10 +43,10 @@ insults_and_comebacks = ["Now I know what filth and stupidity really are.",
 
 def import_insults_and_comebacks(apps, schema_editor):
     for i in range(0, math.floor(len(insults_and_comebacks) / 2)):
-        comeback = Comeback(comeback_text=insults_and_comebacks[i*2])
+        comeback = Comeback(text=insults_and_comebacks[i*2])
         comeback.save()
 
-        insult = Insult(insult_text=insults_and_comebacks[i*2 + 1], correct_comeback=comeback)
+        insult = Insult(text=insults_and_comebacks[i*2 + 1], correct_comeback=comeback)
         insult.save()
 
 
