@@ -1,3 +1,4 @@
+import math
 from random import randint, random
 from typing import List
 
@@ -25,13 +26,13 @@ def begin(request):
         # Create step with random insult.
         insult_count = Insult.objects.count()
         random_insult_index = randint(0, insult_count - 1)
-        insult = Insult.objects.all()[random_insult_index]
-        current_step = Step(index=i, insult=insult, fight=fight)
+        random_insult = Insult.objects.all()[random_insult_index]
+        current_step = Step(index=i, insult=random_insult, fight=fight)
         current_step.save()
 
         # Save correct comebacks.
         # TODO: randomise comebacks.
-        step_comeback = StepComeback(step=current_step, comeback=insult.correct_comeback)
+        step_comeback = StepComeback(step=current_step, comeback=random_insult.correct_comeback)
         step_comeback.save()
 
         # Generate other possible comebacks for the step.
@@ -125,6 +126,49 @@ def comeback(request):
     }
 
     return JsonResponse(data)
+
+
+insults_and_comebacks = ["You fight like a Dairy Farmer!",
+                         "How appropriate! You fight like a cow!",
+                         "This is the END for you, you gutter crawling cur!",
+                         "And I've got a little TIP for you, get the POINT?",
+                         "I've spoken with apes more polite than you!",
+                         "I'm glad to hear you attended your family reunion!",
+                         "Soon you'll be wearing my sword like a shish kebab!",
+                         "First you better stop waving it about like a feather duster.",
+                         "People fall at my feet when they see me coming!",
+                         "Even BEFORE they smell your breath?",
+                         "I'm not going to take your insolence sitting down!",
+                         "Your hemorroids are flaring up again eh?",
+                         "I once owned a dog that was smarter than you.",
+                         "He must have taught you everything you know.",
+                         "Nobody's ever drawn blood from me and nobody ever will.",
+                         "You run THAT fast?",
+                         "Have you stopped wearing diapers yet?",
+                         "Why? Did you want to borrow one?",
+                         "There are no words for how disgusting you are.",
+                         "Yes there are. You just never learned them.",
+                         "You make me want to puke.",
+                         "You make me think somebody already did.",
+                         "My handkerchief will wipe up your blood!",
+                         "So you got that job as janitor, after all.",
+                         "I got this scar on my face during a mighty struggle!",
+                         "I hope now you've learned to stop picking your nose.",
+                         "I've heard you are a contemptible sneak.",
+                         "Too bad no one's ever heard of YOU at all.",
+                         "You're no match for my brains, you poor fool.",
+                         "I'd be in real trouble if you ever used them.",
+                         "You have the manners of a beggar.",
+                         "I wanted to make sure you'd feel comfortable with me."]
+
+
+def seed(request):
+    for i in range(0, math.floor(len(insults_and_comebacks) / 2)):
+        comeback = Comeback(text=insults_and_comebacks[i*2 + 1])
+        comeback.save()
+
+        insult = Insult(text=insults_and_comebacks[i*2], correct_comeback=comeback)
+        insult.save()
 
 
 def get_current_game() -> Game:
