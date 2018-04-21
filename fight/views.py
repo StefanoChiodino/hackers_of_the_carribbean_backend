@@ -84,6 +84,7 @@ def step(request):
 @csrf_exempt
 def comeback(request):
     comeback_text = request.body.decode('utf-8')
+
     game = get_current_game()
     current_step = Step.objects.filter(fight=game.current_fight, index=game.current_fight.step_index).first()
     step_comebacks = StepComeback.objects.filter(step=current_step)
