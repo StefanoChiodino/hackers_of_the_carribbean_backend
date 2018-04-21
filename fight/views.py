@@ -60,6 +60,9 @@ def step(request):
 
     return JsonResponse(data)
 
+# def comeback(request):
+
+
 
 def get_current_game() -> Game:
     # TODO: fix hack.
