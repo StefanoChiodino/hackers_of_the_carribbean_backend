@@ -51,6 +51,8 @@ def begin(request):
     step_comebacks = StepComeback.objects.filter(step=first_step)
 
     data = {
+        'game_id': game.id,
+        'heath': game.health,
         'insult': first_step.insult.text,
         'comebacks': [sc.comeback.text for sc in step_comebacks]
         }
@@ -70,10 +72,10 @@ def step(request):
 
     step_comebacks = StepComeback.objects.filter(step=current_step)
 
-    fight_steps = Step.objects.filter(fight=current_step.fight)
-    fight_step_outcomes: QuerySet[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+    fight_step_outcomes = get_fight_steps_outcomes(current_step)
 
     data = {
+        'heath': game.health,
         'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
         'insult': current_step.insult.text,
         'comebacks': [c.comeback.text for c in step_comebacks]
@@ -102,30 +104,51 @@ def comeback(request):
     fight_step_outcome: FightStepOutcome = FightStepOutcome(step=current_step, won=successful)
     fight_step_outcome.save()
 
-    if successful:
+    fight_step_outcomes = get_fight_steps_outcomes(current_step)
+
+    if not successful:
         game.health = game.health - 1
+        game.save()
         if game.health is 0:
-            return JsonResponse({'dead': True})
+            return JsonResponse({
+                'game_id': game.id,
+                'health': game.health,
+                'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
+                'dead': True
+            })
 
     # Proceed to next step.
     game.current_fight.step_index = game.current_fight.step_index + 1
     game.current_fight.save()
     next_step = Step.objects.filter(fight=game.current_fight, index=game.current_fight.step_index).first()
+
     if next_step is None:
-        return JsonResponse({'fight_finished': True})
+        return JsonResponse({
+            'game_id': game.id,
+            'health': game.health,
+            'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
+            'fight_finished': True
+        })
 
     next_step_comebacks = StepComeback.objects.filter(step=next_step)
 
-    fight_steps = Step.objects.filter(fight=current_step.fight)
-    fight_step_outcomes: QuerySet[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+    fight_step_outcomes = get_fight_steps_outcomes(current_step)
 
     data = {
+        'game_id': game.id,
+        'health': game.health,
         'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
         'insult': next_step.insult.text,
         'comebacks': [c.comeback.text for c in next_step_comebacks]
     }
 
     return JsonResponse(data)
+
+
+def get_fight_steps_outcomes(step):
+    fight_steps = Step.objects.filter(fight=step.fight)
+    fight_step_outcomes: QuerySet[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+    return fight_step_outcomes
 
 
 insults_and_comebacks = ["You fight like a Dairy Farmer!",
