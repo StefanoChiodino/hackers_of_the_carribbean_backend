@@ -57,6 +57,9 @@ def begin(request):
 
 def step(request):
     game = get_current_game()
+    if game.health is 0:
+        return JsonResponse({'dead': True})
+
     current_step = Step.objects.filter(fight=game.current_fight, index=game.current_fight.step_index).first()
 
     if current_step is None:
@@ -103,8 +106,6 @@ def comeback(request):
     }
 
     return JsonResponse(data)
-
-
 
 
 def get_current_game() -> Game:

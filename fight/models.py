@@ -22,7 +22,7 @@ class Fight(models.Model):
     step_index = models.IntegerField(default=0)
 
     def __str__(self):
-        return str(f'{self.current_step}')
+        return str(f'{self.step_index}')
 
 
 class Step(models.Model):
