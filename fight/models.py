@@ -38,7 +38,13 @@ class StepComeback(models.Model):
     step = models.ForeignKey(Step, on_delete=models.CASCADE)
     comeback = models.ForeignKey(Comeback, on_delete=models.CASCADE)
 
+    def __str__(self):
+        return str(f'{self.step} - {self.comeback}')
+
 
 class Game(models.Model):
     health = models.IntegerField()
     current_fight = models.ForeignKey(Fight, on_delete=models.CASCADE, null=True)
+
+    def __str__(self):
+        return str(f'{self.health} - {self.current_fight}')
