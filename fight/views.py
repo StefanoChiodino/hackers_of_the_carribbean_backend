@@ -143,9 +143,11 @@ def comeback(request):
     return JsonResponse(data)
 
 
-def get_fight_steps_outcomes(step):
+def get_fight_steps_outcomes(step: Step)-> List[FightStepOutcome]:
+    if step is None:
+        return List[FightStepOutcome]
     fight_steps = Step.objects.filter(fight=step.fight)
-    fight_step_outcomes: QuerySet[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+    fight_step_outcomes: List[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
     return fight_step_outcomes
 
 
