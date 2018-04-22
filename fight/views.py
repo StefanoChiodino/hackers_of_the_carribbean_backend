@@ -17,6 +17,8 @@ def begin(request):
 
     # Set the new fight as the current fight.
     game = get_current_game()
+    if game is None or game.health <= 0:
+        game = Game(health=3)
     game.current_fight = fight
     game.save()
 
@@ -62,7 +64,7 @@ def step(request):
 
     current_step = Step.objects.filter(fight=game.current_fight, index=game.current_fight.step_index).first()
 
-    fight_step_outcomes = get_fight_steps_outcomes(current_step)
+    fight_step_outcomes = get_fight_steps_outcomes(game.current_fight)
 
     if current_step is None:
         return JsonResponse({
@@ -102,7 +104,7 @@ def comeback(request):
     fight_step_outcome: FightStepOutcome = FightStepOutcome(step=current_step, won=successful)
     fight_step_outcome.save()
 
-    fight_step_outcomes = get_fight_steps_outcomes(current_step)
+    fight_step_outcomes = get_fight_steps_outcomes(game.current_fight)
 
     if not successful:
         game.health = game.health - 1
@@ -130,7 +132,7 @@ def comeback(request):
 
     next_step_comebacks = StepComeback.objects.filter(step=next_step)
 
-    fight_step_outcomes = get_fight_steps_outcomes(current_step)
+    fight_step_outcomes = get_fight_steps_outcomes(game.current_fight)
 
     data = {
         'game_id': game.id,
@@ -143,10 +145,10 @@ def comeback(request):
     return JsonResponse(data)
 
 
-def get_fight_steps_outcomes(step: Step)-> List[FightStepOutcome]:
-    if step is None:
+def get_fight_steps_outcomes(fight: Fight)-> List[FightStepOutcome]:
+    if fight is None:
         return []
-    fight_steps = Step.objects.filter(fight=step.fight)
+    fight_steps = Step.objects.filter(fight=fight)
     fight_step_outcomes: List[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
     return fight_step_outcomes
 
@@ -197,10 +199,8 @@ def seed(request):
 
 def get_current_game() -> Game:
     # TODO: fix hack.
-    game = Game.objects.filter(health__gt=0).first()
+    game = Game.objects.filter(health__gt=0).last()
     if game is not None:
         return game
 
-    game = Game(health=3)
-    game.save()
-    return game
+    return Game.objects.last()
