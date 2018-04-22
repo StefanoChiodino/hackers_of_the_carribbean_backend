@@ -149,7 +149,7 @@ def get_fight_steps_outcomes(fight: Fight)-> List[FightStepOutcome]:
     if fight is None:
         return []
     fight_steps = Step.objects.filter(fight=fight)
-    fight_step_outcomes: List[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps)
+    fight_step_outcomes: List[FightStepOutcome] = FightStepOutcome.objects.filter(step__in=fight_steps).order_by('id')
     return fight_step_outcomes
 
 
