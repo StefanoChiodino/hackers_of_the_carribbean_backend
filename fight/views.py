@@ -57,6 +57,9 @@ def step(request):
     if game.health is 0:
         return JsonResponse({'dead': True})
 
+    if game.current_fight is None:
+        return JsonResponse({'no_current_fight': True})
+
     current_step = Step.objects.filter(fight=game.current_fight, index=game.current_fight.step_index).first()
 
     if current_step is None:
