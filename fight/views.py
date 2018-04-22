@@ -1,8 +1,7 @@
 import math
-from random import randint, random, shuffle
+from random import shuffle
 from typing import List
 
-from django.db.models import QuerySet
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from fuzzywuzzy import fuzz
@@ -195,6 +194,10 @@ def seed(request):
 
         insult = Insult(text=insults_and_comebacks[i*2], correct_comeback=comeback)
         insult.save()
+
+
+def delete_games(request):
+    Game.objects.all().delete()
 
 
 def get_current_game() -> Game:
