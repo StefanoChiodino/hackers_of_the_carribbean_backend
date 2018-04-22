@@ -62,12 +62,15 @@ def step(request):
 
     current_step = Step.objects.filter(fight=game.current_fight, index=game.current_fight.step_index).first()
 
+    fight_step_outcomes = get_fight_steps_outcomes(current_step)
+
     if current_step is None:
-        return JsonResponse({'fight_finished': True})
+        return JsonResponse({
+            'fight_steps_successful': [fso.won for fso in fight_step_outcomes],
+            'fight_finished': True
+        })
 
     step_comebacks = StepComeback.objects.filter(step=current_step)
-
-    fight_step_outcomes = get_fight_steps_outcomes(current_step)
 
     data = {
         'heath': game.health,
@@ -146,6 +149,7 @@ def get_fight_steps_outcomes(step):
     return fight_step_outcomes
 
 
+# http://monkeyisland.wikia.com/wiki/Insult_Sword_Fighting
 insults_and_comebacks = ["You fight like a Dairy Farmer!",
                          "How appropriate! You fight like a cow!",
                          "This is the END for you, you gutter crawling cur!",
